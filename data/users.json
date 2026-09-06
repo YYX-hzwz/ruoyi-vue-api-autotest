@@ -1,0 +1,14 @@
+{
+  "valid_user": {
+    "userName": "testuser001",
+    "nickName": "测试用户001",
+    "password": "123456",
+    "phonenumber": "13800138000",
+    "email": "test001@example.com",
+    "sex": "0",
+    "status": "0",
+    "deptId": 103,
+    "postIds": [4],
+    "roleIds": [2]
+  }
+}
