@@ -1,0 +1,47 @@
+{
+  "_comment": "缺陷登记表。id 与用例的 @pytest.mark.defect('BUG-00X') 一一对应，由 tests/test_09_meta.py 校验一致性。",
+  "defects": [
+    {
+      "id": "BUG-001",
+      "title": "创建用户未校验密码长度，可写入弱口令",
+      "severity": "中",
+      "module": "用户管理",
+      "status": "open",
+      "expected": "密码长度小于 6 位时返回业务错误（code=500 + 提示）",
+      "actual": "接口返回 code=200，弱口令用户被成功创建",
+      "root_cause": "SysUser 实体只有 @Size/@NotBlank 等注解，password 字段未加长度约束；前端有校验但后端未复校验",
+      "impact": "绕过前端即可创建弱口令账号，属安全基线缺失；口令策略无法在服务端强制",
+      "fix": "在新增/重置密码路径上补充长度与复杂度校验（后端，而非仅前端）",
+      "reproduction": "POST /system/user，body.password=123",
+      "test": "tests/test_08_defects.py::test_weak_password_rejected"
+    },
+    {
+      "id": "BUG-002",
+      "title": "普通角色用户可读取用户列表（越权）",
+      "severity": "高",
+      "module": "权限控制",
+      "status": "open",
+      "expected": "角色未授予 system:user:list 时，GET /system/user/list 返回 code=403",
+      "actual": "返回 code=200 并带出全部用户数据",
+      "root_cause": "待确认：两种可能——(a) 接口缺少 @PreAuthorize 注解；(b) 普通角色的菜单权限被误授予 system:user:list。验证方法见 docs/defects.md",
+      "impact": "横向越权，普通账号可枚举组织内全部用户（含手机号、邮箱）",
+      "fix": "按根因补注解或回收菜单权限，并补一条权限矩阵用例长期守护",
+      "reproduction": "普通角色账号登录后 GET /system/user/list?pageNum=1&pageSize=10",
+      "test": "tests/test_08_defects.py::test_normal_user_cannot_list_users"
+    },
+    {
+      "id": "BUG-003",
+      "title": "角色状态字段未做枚举校验，非法值可入库",
+      "severity": "低",
+      "module": "角色管理",
+      "status": "open",
+      "expected": "status 仅允许 0/1，传入 9 时返回业务错误",
+      "actual": "接口返回 code=200，status=9 被写入",
+      "root_cause": "SysRole.status 无 @Pattern/@In 之类枚举约束，仅靠前端下拉框限制",
+      "impact": "脏数据进入 sys_role.status，前端渲染与权限判断都可能按未定义分支处理",
+      "fix": "后端加枚举校验，或在字典层统一约束",
+      "reproduction": "POST /system/role，body.status=\"9\"",
+      "test": "tests/test_08_defects.py::test_invalid_role_status_rejected"
+    }
+  ]
+}
