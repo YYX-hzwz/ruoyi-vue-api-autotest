@@ -1,0 +1,41 @@
+{
+  "_comment": "数据驱动：等价类 / 非法等价类。每个 case 只描述“改哪个字段”和“期望提示”，其余字段由工厂保持合法且唯一。长度边界在 test_03 里用代码构造，避免手写长字符串数错位数。",
+  "cases": [
+    {
+      "id": "empty-username",
+      "title": "用户名为空",
+      "overrides": { "userName": "" },
+      "expect": "用户账号不能为空"
+    },
+    {
+      "id": "blank-username",
+      "title": "用户名全空格",
+      "overrides": { "userName": "   " },
+      "expect": "用户账号不能为空"
+    },
+    {
+      "id": "empty-nickname",
+      "title": "昵称为空",
+      "overrides": { "nickName": "" },
+      "expect": "用户昵称不能为空"
+    },
+    {
+      "id": "email-invalid-format",
+      "title": "邮箱格式非法",
+      "overrides": { "email": "not-an-email" },
+      "expect": "邮箱格式不正确"
+    },
+    {
+      "id": "email-missing-at",
+      "title": "邮箱缺少 @",
+      "overrides": { "email": "user.example.com" },
+      "expect": "邮箱格式不正确"
+    },
+    {
+      "id": "phone-too-long",
+      "title": "手机号 12 位",
+      "overrides": { "phonenumber": "137123456789" },
+      "expect": "手机号码长度不能超过11个字符"
+    }
+  ]
+}

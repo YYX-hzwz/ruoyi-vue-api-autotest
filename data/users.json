@@ -1,0 +1,16 @@
+{
+  "_comment": "工厂只取这些字段作为合法基线，唯一字段会被 factories.py 覆盖",
+  "valid_user": {
+    "userName": "at_template",
+    "nickName": "自动化测试用户",
+    "password": "At@123456",
+    "phonenumber": "13800000000",
+    "email": "at_template@autotest.local",
+    "sex": "0",
+    "status": "0",
+    "deptId": 103,
+    "postIds": [4],
+    "roleIds": [2],
+    "remark": "created by api autotest"
+  }
+}

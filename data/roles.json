@@ -1,0 +1,11 @@
+{
+  "_comment": "角色合法基线；roleName/roleKey 由 factories.py 保证唯一",
+  "valid_role": {
+    "roleName": "at_template_role",
+    "roleKey": "at_template_role",
+    "roleSort": 10,
+    "status": "0",
+    "menuIds": [1, 103, 104],
+    "remark": "created by api autotest"
+  }
+}
