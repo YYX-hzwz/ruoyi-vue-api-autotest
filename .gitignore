@@ -1,0 +1,38 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ---- 虚拟环境 ----
+.venv/
+venv/
+env/
+
+# ---- 测试产物（不入库，由 CI 上传为 artifact）----
+reports/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+allure-results/
+allure-report/
+*.log
+
+# ---- 本地配置（含账号密码，禁止入库）----
+.env
+.env.local
+
+# ---- 编辑器 ----
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- 个人求职材料（含身份信息，禁止入库/推送）----
+career/
+
