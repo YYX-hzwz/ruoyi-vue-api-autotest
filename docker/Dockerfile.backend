@@ -1,0 +1,32 @@
+# RuoYi-Vue 后端镜像。
+# 构建上下文必须是 RuoYi-Vue 源码根目录（含 pom.xml），
+# 所以 compose 里写成：context: ${RUOYI_HOME:-../..}
+#
+# 版本对齐：RuoYi-Vue 3.9.x + JDK 17（见上游 pom.xml 的 <java.version>）。
+
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /src
+
+# 先只拷 pom，利用 Docker 层缓存把依赖下载和源码变更解耦
+COPY pom.xml ./
+RUN mvn -B -q -DskipTests dependency:go-offline
+
+COPY . .
+RUN mvn -B -q -DskipTests package
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+# 时区与中文编码，避免日志和日期字段错位
+ENV TZ=Asia/Shanghai \
+    LANG=C.UTF-8 \
+    JAVA_OPTS="-Xms512m -Xmx1024m"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /src/ruoyi-admin/target/ruoyi-admin.jar /app/app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

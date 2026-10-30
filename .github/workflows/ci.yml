@@ -1,0 +1,136 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-tests:
+    name: 接口自动化（Python ${{ matrix.python }}）
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 语法检查
+        run: python -m compileall -q framework ruoyi stub tests conftest.py
+
+      - name: 静态检查（未定义名 / 语法级错误）
+        run: |
+          pip install ruff
+          ruff check --select E9,F63,F7,F82 --output-format=concise .
+
+      - name: 运行用例（缺陷未修复 → 期望 3 条 xfail）
+        env:
+          AUTOTEST_TARGET: stub
+          AUTOTEST_STUB_REPRODUCE_BUGS: "true"
+        run: |
+          pytest -q --junitxml=reports/junit.xml
+          cp reports/report.html reports/report-defects-open.html
+          cp reports/summary.json reports/summary-defects-open.json
+
+      - name: 缺陷生命周期校验（模拟修复 → 期望 3 条 xpass）
+        env:
+          AUTOTEST_TARGET: stub
+          AUTOTEST_STUB_REPRODUCE_BUGS: "false"
+        run: |
+          pytest -q
+          cp reports/report.html reports/report-defects-fixed.html
+          cp reports/summary.json reports/summary-defects-fixed.json
+          python - <<'PY'
+          import json, sys
+          data = json.load(open("reports/summary-defects-fixed.json", encoding="utf-8"))
+          xpassed = data["totals"].get("xpassed", 0)
+          print(f"已修复缺陷用例数: {xpassed}")
+          if xpassed < 3:
+              sys.exit("缺陷修复后应有 3 条 xfail 转为 xpass，实际 %d 条" % xpassed)
+          PY
+
+      - name: 上传报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-python-${{ matrix.python }}
+          path: reports/
+          retention-days: 14
+
+  e2e-real-backend:
+    name: 真实后端端到端（手动触发）
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # 真实后端需要 RuoYi-Vue 源码（schema + 可构建的 Maven 工程）
+      - name: 拉取 RuoYi-Vue 源码
+        run: |
+          git clone --depth 1 https://github.com/yangzongzhuan/RuoYi-Vue.git "$RUNNER_TEMP/RuoYi-Vue"
+          echo "RUOYI_HOME=$RUNNER_TEMP/RuoYi-Vue" >> "$GITHUB_ENV"
+
+      - name: 启动依赖 + 后端
+        run: |
+          cp .env.example .env
+          docker compose -f docker/docker-compose.yml \
+            --env-file .env --profile backend up -d --build --wait
+
+      - name: 等待后端就绪
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/captchaImage >/dev/null; then
+              echo "后端就绪"; exit 0
+            fi
+            sleep 5
+          done
+          echo "后端未就绪，输出容器日志："
+          docker compose -f docker/docker-compose.yml logs ruoyi || true
+          exit 1
+
+      - name: 安装依赖并执行
+        env:
+          AUTOTEST_TARGET: real
+          AUTOTEST_BASE_URL: http://127.0.0.1:8080
+          AUTOTEST_ADMIN_USER: admin
+          AUTOTEST_ADMIN_PASS: admin123
+          AUTOTEST_CAPTCHA_ENABLED: "false"
+        run: |
+          pip install -r requirements.txt
+          pytest -q --junitxml=reports/junit-real.xml
+
+      - name: 采集后端日志
+        if: always()
+        run: docker compose -f docker/docker-compose.yml logs --no-color ruoyi > reports/backend.log || true
+
+      - name: 上传报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-real-backend
+          path: reports/
+          retention-days: 14
+
+      - name: 清理
+        if: always()
+        run: docker compose -f docker/docker-compose.yml --profile backend down -v

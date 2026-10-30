@@ -1,0 +1,106 @@
+# 依赖服务：MySQL + Redis（默认启动）
+# 可选：RuoYi 后端容器（--profile backend）
+#
+# 用法（在项目根目录）：
+#   docker compose -f docker/docker-compose.yml up -d                  # 只起依赖
+#   docker compose -f docker/docker-compose.yml --profile backend up -d --build
+#
+# RUOYI_HOME 指向 RuoYi-Vue 源码根目录（含 pom.xml 与 sql/）。
+# 本项目的默认布局是 autotest/ 位于 RuoYi-Vue/ 下，所以默认值 ../.. 可用。
+
+name: ruoyi-autotest
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ruoyi-mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-time-zone=+08:00
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ry-vue
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: ruoyi-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 一次性任务：导入 RuoYi 的 schema，并把验证码开关在测试库里关掉。
+  # 单独用 init 容器而不是挂进 /docker-entrypoint-initdb.d，
+  # 是因为 RuoYi 的 SQL 里没有 CREATE DATABASE/USE，直接挂载会执行失败。
+  db-init:
+    image: mysql:8.0
+    container_name: ruoyi-db-init
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MYSQL_PWD: root
+    volumes:
+      - ${RUOYI_HOME:-../..}:/ruoyi:ro
+      - ./mysql:/sqlinit:ro
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -euo pipefail
+        echo "[db-init] 建库"
+        mysql -h mysql -uroot -e "CREATE DATABASE IF NOT EXISTS \`ry-vue\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
+        echo "[db-init] 导入主 schema"
+        mysql -h mysql -uroot ry-vue < /ruoyi/sql/ry_*.sql
+        echo "[db-init] 导入 quartz"
+        mysql -h mysql -uroot ry-vue < /ruoyi/sql/quartz.sql
+        echo "[db-init] 应用测试环境配置"
+        mysql -h mysql -uroot ry-vue < /sqlinit/zz-test-env.sql
+        echo "[db-init] 完成"
+    restart: "no"
+
+  # 可选：把 RuoYi 后端也容器化。首次构建需要 Maven 下载依赖，耗时较长。
+  ruoyi:
+    profiles: ["backend"]
+    build:
+      context: ${RUOYI_HOME:-../..}
+      dockerfile: autotest/docker/Dockerfile.backend
+    container_name: ruoyi-admin
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_DRUID_MASTER_URL: jdbc:mysql://mysql:3306/ry-vue?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_DRUID_MASTER_USERNAME: root
+      SPRING_DATASOURCE_DRUID_MASTER_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      JAVA_OPTS: "-Xms512m -Xmx1024m"
+      TZ: Asia/Shanghai
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/captchaImage >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+volumes:
+  mysql-data:
