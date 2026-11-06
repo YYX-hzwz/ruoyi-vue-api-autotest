@@ -23,20 +23,20 @@ py -m pytest          # 不需要数据库、不需要起后端，10 秒内出�
 
 ---
 
-## 2. 这个项目想证明什么
+## 2. 设计要点
 
-不是"我会用 requests 发请求"，而是四件面试里更值钱的事：
+框架的核心不是"能发请求"，而是四件事：
 
 1. **能设计，而不是堆**。`framework/` 是通用测试基础设施（配置/HTTP/断言/契约/数据/追踪），`ruoyi/` 是被测系统领域层（API Object/工厂/契约/清理）。换一个被测系统，`framework/` 一行不用改。
 2. **断言能抓住缺陷，而不是把缺陷写成通过**。见第 6 节：发现的问题被写成**会红**的用例，而不是 `assert code == 200  # 这是缺陷`。
 3. **失败能自证原因**。每条用例的请求/响应都作为附件进报告，失败时直接给 cURL，后端同学能原样复现。
 4. **质量可以被门禁化**。CI 里两轮跑：缺陷存在时 3 xfail，模拟修复后 3 xpass，说明"缺陷 → 用例 → 修复 → 回归"的链路是通的。
 
-## 3. 也能看清它的边界
+## 3. 适用范围与边界
 
 - 契约桩（`stub/`）**不是被测系统**，它只保证"框架与用例逻辑正确"。对 RuoYi 的质量结论必须来自 `AUTOTEST_TARGET=real`。这条边界在每次运行的横幅、README、报告里都写死了。
 - 3 个缺陷的判定基于 RuoYi-Vue 3.9.2 的默认配置。换版本要重新确认（尤其 BUG-002 涉及权限配置，见 `docs/defects.md` 的排查方法）。
-- 还没做：UI 层（Playwright）、接口加密/签名、消息队列异步校验、多租户数据隔离。这些在 `docs/学习路线.md` 的"下一步"里。
+- 还没做：UI 层（Playwright）、接口加密 / 签名、消息队列异步校验、多租户数据隔离。
 
 ---
 
@@ -121,7 +121,7 @@ autotest/
 ├── defects/registry.json   缺陷登记表（id 与用例绑定，meta test 校验）
 ├── docker/                 MySQL/Redis/后端编排 + 测试环境 SQL
 ├── data/                   数据模板与参数化用例
-├── docs/                   架构、测试方案、缺陷、真实环境、学习路线
+├── docs/                   架构、测试方案、缺陷、真实环境
 ├── scripts/                一键脚本
 └── reports/                产物（gitignore）
 ```
@@ -216,7 +216,7 @@ locust -f performance_test/locustfile.py --headless -t 3m --html reports/perf.ht
 
 ---
 
-## 11. 设计取舍（面试会被问）
+## 11. 设计取舍
 
 **为什么不用 pytest-allure / pydantic / jsonschema？**
 本项目开发环境没有外网，装不了。于是把依赖压到 `requests + pytest + pytest-html`，schema 校验、配置加载、日志脱敏、报告附件全部手写（约 600 行）。取舍是：换来了"任何 Python 环境 clone 即跑"，代价是没有 Allure 的用例树和步骤分组。生产项目里我会直接上 Allure + pydantic——`framework/` 的接口边界就是为了让这个替换只影响一层。
@@ -234,4 +234,4 @@ locust -f performance_test/locustfile.py --headless -t 3m --html reports/perf.ht
 
 ## 12. 下一步
 
-见 [docs/学习路线.md](docs/学习路线.md) 的"进阶"章节：Playwright UI 冒烟（API 造数 + UI 断言）、Testcontainers、消息队列异步校验、GitHub Actions 里跑真实后端。
+Playwright UI 冒烟（API 造数 + UI 断言）、Testcontainers 隔离依赖、消息队列异步校验、在 GitHub Actions 中运行真实后端。

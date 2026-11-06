@@ -37,7 +37,7 @@ if (-not $Force -and ("$name" -match "你的名字" -or "$email" -match "你的�
 $commits = @(
     @{
         message = "chore(repo): 清理仓库卫生并归档旧版用例`n`n- 补 .gitignore，移除入库的 __pycache__ 与 60KB report.html`n- 修正 pytest.ini（testpaths 指向不存在的 tests/）`n- 旧版 43 条用例移入 legacy/，保留为重构对照`n- 配置外置为 .env.example，不再硬编码地址与口令"
-        paths   = @(".gitignore", ".env.example", "pytest.ini", "requirements.txt", "report.html", "__pycache__", "legacy", "docs/review-2026.md", "api_client.py", "config.py", "defects.md", "test_login.py", "test_user_api.py", "test_user_extended.py", "test_role_api.py", "test_common_api.py")
+        paths   = @(".gitignore", ".env.example", "pytest.ini", "requirements.txt", "report.html", "__pycache__", "legacy", "docs/architecture.md", "api_client.py", "config.py", "defects.md", "test_login.py", "test_user_api.py", "test_user_extended.py", "test_role_api.py", "test_common_api.py")
     },
     @{
         message = "feat(framework): 通用测试基础设施`n`n- settings: 环境变量配置，启动即校验，frozen dataclass`n- http: Session 复用 + 强制超时 + 幂等重试 + 401 自动重登`n- assertions: expect_ok/expect_perm_denied/eventually，失败带完整响应上下文`n- schema: 零依赖响应契约 DSL，返回全部错误而非第一个`n- trace/logger: 请求响应追踪与敏感信息脱敏"
@@ -56,7 +56,7 @@ $commits = @(
         paths   = @("tests", "conftest.py", "defects")
     },
     @{
-        message = "ci: 流水线、环境编排、性能基线与文档`n`n- CI 双轮跑（缺陷存在/修复），上传 report/QUALITY/summary`n- docker compose 编排 MySQL/Redis/后端，SQL 初始化测试库`n- Locust 加业务断言、阶梯加压与 SLA 门禁`n- 补齐架构、测试方案、缺陷、真实环境与学习路线文档"
+        message = "ci: 流水线、环境编排、性能基线与文档`n`n- CI 双轮跑（缺陷存在/修复），上传 report/QUALITY/summary`n- docker compose 编排 MySQL/Redis/后端，SQL 初始化测试库`n- Locust 加业务断言、阶梯加压与 SLA 门禁`n- 补齐架构、测试方案、缺陷与真实环境文档"
         paths   = @(".github", "docker", "scripts", "performance_test", "docs", "README.md")
     }
 )

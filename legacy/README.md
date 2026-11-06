@@ -19,5 +19,4 @@ diff legacy/test_user_api.py tests/test_02_user_crud.py
 
 新代码请从 `framework/`、`ruoyi/`、`tests/` 三个目录开始读。
 
-重构后的评审记录见 `docs/review-2026.md`（"重构前"视角），
-修复结果见 `README.md`。
+重构前的设计取舍与问题记录见 `README.md` 的「设计取舍」一节。

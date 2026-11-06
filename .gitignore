@@ -33,6 +33,8 @@ allure-report/
 .DS_Store
 Thumbs.db
 
-# ---- 个人求职材料（含身份信息，禁止入库/推送）----
+# ---- 本地资料 ----
 career/
 
+# ---- 工具生成的临时渲染目录 ----
+.dsh-office-*/
