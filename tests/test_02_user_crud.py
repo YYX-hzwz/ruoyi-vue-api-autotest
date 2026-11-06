@@ -39,7 +39,7 @@ def test_user_list_structure(user_api) -> None:
 def test_user_list_pagination_is_effective(user_api) -> None:
     """分页测试必须能发现"后端忽略 pageSize"。
 
-    老写法 `len(rows) <= page_size` 是假断言：后端返回全部数据时它依然成立。
+    仅比较行数的写法无法验证分页：后端返回全部数据时该断言依然成立。
     正确做法是同时校验 total 与页面长度的关系。
     """
     rows = expect_list_page(user_api.list(page_num=1, page_size=2), expected_size=2)
@@ -116,8 +116,8 @@ def test_delete_nonexistent_user_rejected(user_api) -> None:
 def test_cannot_delete_super_admin(user_api) -> None:
     """破坏性操作必须落在"期望被拒绝"的断言上，而不是赌它成功。
 
-    原项目直接 `DELETE /system/user/1`，然后断言 500——它无法区分
-    "被权限拦住"和"被业务规则拦住"，一旦权限真的失效就会删掉管理员。
+    直接断言 500 无法区分「被权限拦截」与「被业务规则拦截」；
+    一旦权限失效，管理员会被实际删除。
     """
     expect_biz_error(user_api.delete(ADMIN_USER_ID), msg_contains=MSG_NOT_ALLOW_ADMIN_USER)
 

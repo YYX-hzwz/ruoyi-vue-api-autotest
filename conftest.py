@@ -266,8 +266,8 @@ def role_factory(role_api: RoleAPI) -> Iterator[Callable[..., CreatedRole]]:
 def common_role_id(role_api: RoleAPI) -> int:
     """按 roleKey 解析普通角色，而不是硬编码 id=2。
 
-    硬编码 id 是原项目最大的可移植性缺陷：换一套初始化数据，
-    全套权限用例会以"错误理由通过"。
+    按 roleKey 解析可避免硬编码主键：初始化数据变化时，
+    权限用例不会因 id 错位而以"错误理由通过"。
     """
     rows = role_api.list(role_key="common", page_size=50).rows
     for row in rows:

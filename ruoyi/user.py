@@ -1,7 +1,6 @@
 """用户管理接口。
 
-字段名严格对齐 RuoYi-Vue 3.8.x 的 `SysUserController`。
-改动这里之前先确认后端版本，别用猜的。
+字段名与 RuoYi-Vue 3.8.x 的 `SysUserController` 保持一致，后端版本升级时需同步核对。
 """
 
 from __future__ import annotations
@@ -77,8 +76,7 @@ class UserAPI(BaseAPI):
 
         注意 RuoYi 的签名是 `insertAuthRole(Long userId, Long[] roleIds)`，
         没有 `@RequestBody`，Spring 从 **query string** 绑定。
-        用 JSON body 调这个接口在标准实现上会 400/500——
-        原项目就是这么调的，却断言 200 通过，说明它跑的不是标准 RuoYi。
+        以 JSON body 调用该接口在标准实现上会返回 400/500。
         """
         params: dict[str, Any] = {"userId": user_id}
         if role_ids:

@@ -87,7 +87,7 @@ def test_create_user_short_password(admin_client):
     user_data["email"] = f"short_{suffix}@example.com"
     user_data["password"] = "123"
     resp = admin_client.post("/system/user", json=user_data)
-    # 当前后端未校验密码长度，记录为缺陷，先让测试通过
+    # 后端未校验密码长度，此处断言当前实际行为（200）
     assert resp.json()["code"] == 200
 
 def test_create_user_empty_username(admin_client):

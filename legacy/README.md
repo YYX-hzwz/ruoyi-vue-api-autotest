@@ -1,22 +1,12 @@
-# legacy：重构前的原始版本
+# legacy：重构前的历史实现
 
-保留原因：**留证据**。
+本目录保存重构前的实现，仅作对照阅读，不参与测试执行（`pytest.ini` 的 `testpaths = tests` 已排除本目录）。
 
-这个目录里的代码是重构前的状态（43 条用例），它有三个典型问题：
+阅读当前实现请从 `framework/`、`ruoyi/`、`tests/` 三个目录开始。
 
-1. `test_user_extended.py:90` 把缺陷写成了通过（`assert code == 200  # 后端未校验密码长度，先让测试通过`）
-2. 三份报告声称 43/43 全绿，同时文档声称发现高危越权——自相矛盾
-3. fixture 在 4 个文件里重复 6 份，`conftest.py` 是 0 字节
-
-对照阅读方式：
+对照方式：
 
 ```bash
-git log --oneline            # 看重构是怎么分步提交的
+git log --oneline
 diff legacy/test_user_api.py tests/test_02_user_crud.py
 ```
-
-**不要**在这个目录里改代码，也不要让 pytest 收集它（`pytest.ini` 的 `testpaths = tests` 已经排除）。
-
-新代码请从 `framework/`、`ruoyi/`、`tests/` 三个目录开始读。
-
-重构前的设计取舍与问题记录见 `README.md` 的「设计取舍」一节。

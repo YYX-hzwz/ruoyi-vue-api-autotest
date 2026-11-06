@@ -6,7 +6,7 @@
 3. 返回 ApiResponse（**不做断言**）。
 
 断言放在用例里，不放在 API 层。原因：API 层一旦内建断言，
-同一方法便无法用于"失败路径"，只能另写 `create_user_raw` 之类的重复方法。这也正是原项目 `APIClient.login()` 里塞 `assert` 的坏处。
+同一方法便无法用于"失败路径"，只能另写 `create_user_raw` 之类的重复方法。
 """
 
 from __future__ import annotations
