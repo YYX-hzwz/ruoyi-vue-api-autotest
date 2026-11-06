@@ -131,7 +131,7 @@ AUTOTEST_CAPTCHA_CODE=1111
 AUTOTEST_REDIS_URL=redis://localhost:6379/0
 ```
 
-注意 `pip install redis` 是方案 c 的前置；没装时框架会直接告诉你缺什么，不会静默失败。
+`pip install redis` 是方案 c 的前置条件；未安装时框架会直接抛出缺失依赖，不会静默失败。
 
 ### 6.2 报"被测后端不可达"并退出（returncode=2）
 
@@ -146,7 +146,7 @@ curl -i http://localhost:8080/captchaImage
 
 - 全红：`common` 角色不存在或菜单权限被回收过度。检查
   `role_api.list(role_key="common")` 是否有数据。
-- 全绿（本该拒绝的也 200）：可能是 BUG-002 在真实环境复现了——这正是我们要的信号，
+- 全绿（本该拒绝的也 200）：可能是 BUG-002 在真实环境复现，属预期信号，
   去看报告里那条 `xfail` 是 `xfailed` 还是 `xpassed`。
 
 ### 6.4 用户创建报"手机号码已存在"
@@ -165,7 +165,7 @@ DELETE FROM sys_role WHERE role_key LIKE 'at_role_%';
 
 ---
 
-## 7. 首次跑通后的建议动作
+## 7. 首次运行后的检查项
 
 1. 把 `reports/report.html` 和 `reports/QUALITY.md` 存档，作为基线；
 2. 对比桩环境与真实环境的 xfail 结果差异——差异就是"桩与真实后端的契约漂移"；

@@ -7,10 +7,9 @@
 - 缺陷修复后 → 用例通过，被记作 xpassed，控制台会提示"请移除 xfail 标记"；
 - 有人把缺陷改回去（回归）→ 用例重新变红，立刻暴露。
 
-`strict=False` 而不是 `strict=True` 的原因：strict=True 在缺陷修复后会直接
-把 CI 判红，逼着你在修 bug 的同一个提交里改测试；而测试与修复往往不是同一个人、
-不在同一个迭代。这里用 `strict=False` + 会话结束时主动提示"已修复，请移除标记"，
-在"不误伤 CI"和"不遗忘清理"之间取平衡。
+采用 `strict=False`：`strict=True` 会在缺陷修复后直接使 CI 失败，
+要求修复与测试调整处于同一提交，而两者通常由不同人员在不同迭代完成。
+`strict=False` 配合会话结束时提示「已修复，请移除标记」，兼顾 CI 稳定性与标记清理。
 """
 
 from __future__ import annotations

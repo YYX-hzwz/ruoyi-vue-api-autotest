@@ -75,7 +75,7 @@ def test_create_user_invalid_email(admin_client):
     user_data["phonenumber"] = f"135{suffix}"
     user_data["email"] = "not-an-email"
     resp = admin_client.post("/system/user", json=user_data)
-    # 可能返回500或200取决于后端校验，我们仅验证是否有错误
+    # 返回码取决于后端校验实现，此处仅验证是否报错
     assert resp.json()["code"] == 500 or "邮箱" in resp.json()["msg"]
 
 def test_create_user_short_password(admin_client):
